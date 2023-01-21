@@ -1,0 +1,130 @@
+const express = require('express');
+const bodyparser = require('body-parser');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const cors = require('cors');
+const path = require("path");
+const websocket = require('ws');
+const http = require('http');
+const child_process = require("child_process");
+
+var parser = require('./calc');
+require('dotenv').config()
+
+const app = express();
+
+app.use(cors());
+app.use(bodyparser.urlencoded({ extended: false }));
+app.use(bodyparser.json());
+app.use(express.static(__dirname));
+
+
+
+const server = http.createServer(app);
+server.listen(3001, () => {
+  console.log("Server running on port 3001");
+});
+
+
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '/index.html'));
+});
+
+
+// //Verify Token
+
+// const verifyToken = (req, res, next) => {
+//   const header = req.headers['authorization'].split(" ");
+//   const token = (header[1]);
+//   if (!token) {
+//     return res.status(403).send("A token is required for authentication");
+//   }
+//   try {
+//     const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+//     req.user = decoded;
+//   } catch (err) {
+//     return res.status(401).send("Invalid Token");
+//   }
+//   return next();
+// };
+
+//Login
+app.post('/login', async (req, res) => {
+
+  const token = jwt.sign({
+    email: req.body.email,
+    password: req.body.password,
+
+  }, process.env.TOKEN_SECRET, {
+    expiresIn: "10m"
+  })
+  res.header('auth-token', token).json({
+    error: null,
+    data: { token }
+  })
+});
+
+//WebSocket to control each request
+const wss = new websocket.Server({ server: server, path: '/wss' });
+let count = 0;
+wss.on('connection', (ws) => {
+
+  ws.on('connection', function (connection) {
+    console.log('WebSocket Client Connected');
+  });
+
+  ws.on('error', error => {
+    console.log("Connection Error: " + error.toString());
+  });
+
+  ws.on('close', () => {
+    console.log('Connection Closed');
+  });
+
+  ws.on('message', message => {
+    //const header = message[0];
+    const header = message.toString().split(",");
+    const token = header[0];
+    if (!token) {
+      ws.send('A token is required for authentication');
+    } else {
+      try {
+        const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+        request(header[1]);
+      } catch (err) {
+        ws.send("Invalid Token");
+      }
+    }
+
+    function request(message) {
+      if (count < 5) {
+        count++
+        console.log("Received: '" + message + "'Attempts: " + count);
+        let operator = "Evaluar["+ message +"];"
+        var workerProcess = child_process.exec('node ./parseator.js ' + operator,
+          function (error, stdout, stderr) {
+            if (error) {
+              console.log(error.stack);
+              console.log('Error code: ' + error.code);
+              console.log('Signal received: ' + error.signal);
+            }
+            console.log('stdout: ' + stdout);
+            ws.send(stdout);
+            //console.log('stderr: ' + stderr);  
+          });
+        workerProcess.on('exit', function (code) {
+          console.log('Child process exited with exit code ' + code);
+        });
+      } else {
+        ws.send('You can not do more requests');
+        ws.close();
+      }
+
+
+    }
+
+  });
+});
+
+
