@@ -1,4 +1,5 @@
 var token;
+let count = 5;
 
 document.getElementById("loginButton").addEventListener("click", login);
 document.getElementById("requestButton").addEventListener("click", request);
@@ -27,7 +28,6 @@ function login() {
 function request() {
     let request = document.getElementById("textRequest").value;
     let result = document.getElementById("result");
-    let count = 5;
     result.innerHTML = "Processing request ...";
     let data = [token, request];
     const socket = new WebSocket('ws://localhost:3001/wss');
@@ -41,11 +41,14 @@ function request() {
         socket.onmessage = function (event) {
             // alert(`[message] Data received from server: ${event.data}`);
             console.log(event.data);
-            count--;
+            if(count > 0){
+                count--;
+            }
+            
             document.getElementById("requestR").innerHTML = count;
             setTimeout(() => {
                 result.innerHTML = event.data;
-              }, Math.random() * (5000 - 1000) + 1000);
+              }, Math.random() * (3000 - 1000) + 1000);
               
 
             

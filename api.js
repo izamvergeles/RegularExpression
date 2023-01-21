@@ -8,7 +8,8 @@ const websocket = require('ws');
 const http = require('http');
 const child_process = require("child_process");
 
-var parser = require('./calc');
+//MANERA FACIL: Para hacer una cola de tareas se puede hacer un array de tareas e ir insertando y eliminandolas de la coleccion cuando vayan terminando
+
 require('dotenv').config()
 
 const app = express();
@@ -18,14 +19,10 @@ app.use(bodyparser.urlencoded({ extended: false }));
 app.use(bodyparser.json());
 app.use(express.static(__dirname));
 
-
-
 const server = http.createServer(app);
 server.listen(3001, () => {
   console.log("Server running on port 3001");
 });
-
-
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '/index.html'));
@@ -83,7 +80,6 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('message', message => {
-    //const header = message[0];
     const header = message.toString().split(",");
     const token = header[0];
     if (!token) {
@@ -120,9 +116,12 @@ wss.on('connection', (ws) => {
         ws.send('You can not do more requests');
         ws.close();
       }
-
-
     }
+
+
+
+    
+
 
   });
 });
