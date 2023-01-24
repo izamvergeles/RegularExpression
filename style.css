@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400&display=swap');
 
-
 html{
     background-color: #21222c;
     display: flex;
@@ -11,7 +10,6 @@ html{
     font-family: Montserrat;
     
 }
-
 
 .login{
     flex: 1;
@@ -55,12 +53,16 @@ html{
     background-color: rgb(158, 158, 158);
     color: black;
 }
-.request{
-    display: none;
-}
+
 .time{
     font-weight: 300;
     font-size: 14px;
     margin-top: 20px;
     width: 80%;
+}
+.request{
+    display: none;
+}
+.register{
+    display: none;
 }

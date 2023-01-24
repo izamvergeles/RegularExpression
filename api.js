@@ -7,16 +7,15 @@ const path = require("path");
 const websocket = require('ws');
 const http = require('http');
 const child_process = require("child_process");
-
-//MANERA FACIL: Para hacer una cola de tareas se puede hacer un array de tareas e ir insertando y eliminandolas de la coleccion cuando vayan terminando
+const mongoose = require("mongoose");
 
 require('dotenv').config()
 
 const app = express();
 
 app.use(cors());
-app.use(bodyparser.urlencoded({ extended: false }));
 app.use(bodyparser.json());
+app.use(bodyparser.urlencoded({ extended: false }));
 app.use(express.static(__dirname));
 
 const server = http.createServer(app);
@@ -46,20 +45,77 @@ app.get('/', (req, res) => {
 //   return next();
 // };
 
+//Hashing Password
+
+
+
+//Register
+const userSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true
+  },
+  password: {
+    type: String,
+    required: true
+  }
+});
+mongoose.set('strictQuery', true);
+const User = mongoose.model('User', userSchema);
+app.post('/register', async (req, res) => {
+
+  try {
+    mongoose.connect(process.env.MONGODB_URL);
+    console.log("Database connected");
+    
+    let hashedPassword = await bcrypt.hash(req.body.password, 10);
+    let user = new User({
+      email: req.body.email,
+      password: hashedPassword,
+    });
+
+    user.save();
+    console.log("Inserted new user");
+    res.json({ message: "User Created" });
+
+  } catch (err) {
+    console.log("Connection Error: " + err);
+  };
+});
+
+
 //Login
 app.post('/login', async (req, res) => {
+  console.log(req.body.email);
+  try {
+    mongoose.connect(process.env.MONGODB_URL);
+    console.log("Database connected");
+    let user = await User.findOne({ email: req.body.email }); 
+    if (bcrypt.compareSync(req.body.password, user.password)) {
+      console.log("User verified");
+      const token = jwt.sign({
+        email: req.body.email,
+        password: req.body.password,
 
-  const token = jwt.sign({
-    email: req.body.email,
-    password: req.body.password,
+      }, process.env.TOKEN_SECRET, {
+        expiresIn: "10m"
+      })
+      res.header('auth-token', token).json({
+        error: null,
+        data: { token }
+      })
+    } else {
+      console.log("The username or password is incorrect");
+    }
+  } catch (err) {
+    console.log("Login Error");
+  };
+  //user.map(doc => doc.name).sort();
 
-  }, process.env.TOKEN_SECRET, {
-    expiresIn: "10m"
-  })
-  res.header('auth-token', token).json({
-    error: null,
-    data: { token }
-  })
+
+
+
+
 });
 
 //WebSocket to control each request
@@ -97,7 +153,7 @@ wss.on('connection', (ws) => {
       if (count < 5) {
         count++
         console.log("Received: '" + message + "'Attempts: " + count);
-        let operator = "Evaluar["+ message +"];"
+        let operator = "Evaluar[" + message + "];"
         var workerProcess = child_process.exec('node ./parseator.js ' + operator,
           function (error, stdout, stderr) {
             if (error) {
@@ -120,7 +176,7 @@ wss.on('connection', (ws) => {
 
 
 
-    
+
 
 
   });

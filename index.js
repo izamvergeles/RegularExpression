@@ -3,27 +3,30 @@ let count = 5;
 
 document.getElementById("loginButton").addEventListener("click", login);
 document.getElementById("requestButton").addEventListener("click", request);
+document.getElementById("registerButton").addEventListener("click", register);
+document.getElementById("createButton").addEventListener("click", showRegister);
+
+
 
 function login() {
     let email = document.getElementById("email").value;
-
     let password = document.getElementById("password").value;
-
     fetch('http://localhost:3001/login', {
         method: 'POST',
-        body: {
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
             'email': email,
             'password': password
-        }
+        })
     }).then(response => {
-        hide();
+        showRequest();
         return response.json();
 
     }).then(response => {
         token = response.data.token;
 
-    })
-}
+    });
+};
 
 function request() {
     let request = document.getElementById("textRequest").value;
@@ -49,12 +52,8 @@ function request() {
             setTimeout(() => {
                 result.innerHTML = event.data;
               }, Math.random() * (3000 - 1000) + 1000);
-              
-
             
-
         };
-
         socket.onclose = function (event) {
             // if (event.wasClean) {
             //   alert(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
@@ -64,46 +63,50 @@ function request() {
             //   alert('[close] Connection died');
             // }
         };
-
         socket.onerror = function (error) {
             // alert(`[error]`);
         };
-    }
+    };
+};
 
+function register(){
+    let email = document.getElementById("registerEmail").value;
+    let password = document.getElementById("registerPassword").value;
+    console.log(email, password);
+    fetch('http://localhost:3001/register', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            'email': email,
+            'password': password
+        })
+    }).then(response => {
+        showLogin();
+        return response.json();
 
-    // if(token)
-    // fetch('http://localhost:3001/request', {
-    //     method: 'GET',
-    //     headers: {
-    //         'Authorization': `Bearer ${token}`,
-    //         'Content-Type': 'application/json',
-    //         'Accept': 'application/json'
+    }).then(response => {
+        console.log(response.message);
 
-    //     }
-    // }).then(response => {
-    //     return response.json();
+    });
 
-    // }).then(response => {
-    //     if(response.data.error){
-    //         console.log(response.data.error);
-    //         show();
-    //     }
-
-    // })
-    // else{
-    //     console.log("no token");
-    // }
 
 }
 
-function hide() {
+function showRequest() {
     document.getElementById("request").style.display = "flex";
     document.getElementById("login").style.display = "none";
-}
-function show() {
+    document.getElementById("register").style.display = "none";
+};
+function showLogin() {
+    document.getElementById("register").style.display = "none";
     document.getElementById("request").style.display = "none";
     document.getElementById("login").style.display = "flex";
-}
+};
+function showRegister() {
+    document.getElementById("register").style.display = "flex";
+    document.getElementById("request").style.display = "none";
+    document.getElementById("login").style.display = "none";
+};
 
 
 
