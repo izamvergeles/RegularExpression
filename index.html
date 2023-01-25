@@ -1,54 +1,44 @@
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link href="style.css" rel="stylesheet" type="text/css">
-    
-</head>
-<body>
-    <div class="login register" id="register">
-        <div class="title">Register</div>
-        <input type="text" class="text" id="registerEmail">
-        <input type="password" class="text" id="registerPassword">
-        <div class="loginButton" id="registerButton">Register</div>
-        
-    </div>
-
-
-    <div class="login" id="login">
-        <div class="title">Login</div>
-        <input type="text" class="text" id="email">
-        <input type="password" class="text" id="password">
-        <div class="loginButton" id="loginButton">LOGIN</div>
-        <div class="loginButton" id="createButton">Create Account</div>
-        
-    </div>
-
-    <div class="login request" id="request">
-        <div class="title">Request</div>
-        <input type="text" class="text" id="textRequest">
-        <div class="loginButton" id="requestButton">REQUEST</div>
-        <div class="time">
-            <div class="timeTitle">Time Remaining: <span class="timeR" id="timer"></span></div>
-            
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        <link href="style.css" rel="stylesheet" type="text/css">
+    </head>
+    <body>
+        <div class="alert" id="alert">
+            <div class="alertMessage" id="alertMessage"></div>
         </div>
-        <div class="time">
-            <div class="requetsTitle">Remaining Requests: <span class="requestR" id="requestR"></span></div>
-            
+        <div class="login register" id="register">
+            <div class="title">Register</div>
+            <input type="text" class="text" id="registerEmail">
+            <input type="password" class="text" id="registerPassword">
+            <div class="loginButton" id="registerButton">Register</div>
         </div>
-        <div class="time">
-            <div class="requetsTitle">Result: <span class="requestR" id="result"></span></div>
-            
+        <div class="login" id="login">
+            <div class="title">Login</div>
+            <input type="text" class="text" id="email">
+            <input type="password" class="text" id="password">
+            <div class="loginButton" id="loginButton">LOGIN</div>
+            <div class="loginButton" id="createButton">Create Account</div>
         </div>
-    </div>
-    
-    
-
-    <script type="module" src="index.js"></script>
-</body>
-
+        <div class="login request" id="request">
+            <div class="title">Request</div>
+            <input type="text" class="text" id="textRequest">
+            <div class="loginButton" id="requestButton">REQUEST</div>
+            <div class="time">
+                <div class="timeTitle">Time Remaining: <span class="timeR" id="timer"></span></div>
+            </div>
+            <div class="time">
+                <div class="requetsTitle">Remaining Requests: <span class="requestR" id="requestR"></span></div>
+            </div>
+            <div class="time">
+                <div class="requetsTitle">Result: <span class="requestR" id="result"></span></div>
+            </div>
+        </div>
+        <script type="module" src="index.js"></script>
+    </body>
 </html>

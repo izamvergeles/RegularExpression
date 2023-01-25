@@ -28,27 +28,6 @@ app.get('/', (req, res) => {
 });
 
 
-// //Verify Token
-
-// const verifyToken = (req, res, next) => {
-//   const header = req.headers['authorization'].split(" ");
-//   const token = (header[1]);
-//   if (!token) {
-//     return res.status(403).send("A token is required for authentication");
-//   }
-//   try {
-//     const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
-//     req.user = decoded;
-//   } catch (err) {
-//     return res.status(401).send("Invalid Token");
-//   }
-//   return next();
-// };
-
-//Hashing Password
-
-
-
 //Register
 const userSchema = new mongoose.Schema({
   email: {
@@ -63,36 +42,30 @@ const userSchema = new mongoose.Schema({
 mongoose.set('strictQuery', true);
 const User = mongoose.model('User', userSchema);
 app.post('/register', async (req, res) => {
-
   try {
     mongoose.connect(process.env.MONGODB_URL);
     console.log("Database connected");
-    
     let hashedPassword = await bcrypt.hash(req.body.password, 10);
     let user = new User({
       email: req.body.email,
       password: hashedPassword,
     });
-
     user.save();
     console.log("Inserted new user");
     res.json({ message: "User Created" });
-
   } catch (err) {
     console.log("Connection Error: " + err);
   };
 });
 
-
 //Login
 app.post('/login', async (req, res) => {
-  console.log(req.body.email);
-  try {
-    mongoose.connect(process.env.MONGODB_URL);
-    console.log("Database connected");
-    let user = await User.findOne({ email: req.body.email }); 
-    if (bcrypt.compareSync(req.body.password, user.password)) {
-      console.log("User verified");
+  // try {
+  //   mongoose.connect(process.env.MONGODB_URL);
+  //   console.log("Database connected");
+  //   let user = await User.findOne({ email: req.body.email }); 
+  //   if (bcrypt.compareSync(req.body.password, user.password)) {
+  //     console.log("User verified");
       const token = jwt.sign({
         email: req.body.email,
         password: req.body.password,
@@ -104,40 +77,30 @@ app.post('/login', async (req, res) => {
         error: null,
         data: { token }
       })
-    } else {
-      console.log("The username or password is incorrect");
-    }
-  } catch (err) {
-    console.log("Login Error");
-  };
-  //user.map(doc => doc.name).sort();
-
-
-
-
-
+  //   } else {
+  //     console.log("The username or password is incorrect");
+  //   }
+  // } catch (err) {
+  //   console.log("Login Error");
+  // };
 });
 
 //WebSocket to control each request
 const wss = new websocket.Server({ server: server, path: '/wss' });
 let count = 0;
 wss.on('connection', (ws) => {
-
   ws.on('connection', function (connection) {
     console.log('WebSocket Client Connected');
   });
-
   ws.on('error', error => {
     console.log("Connection Error: " + error.toString());
   });
-
   ws.on('close', () => {
     console.log('Connection Closed');
   });
-
   ws.on('message', message => {
-    const header = message.toString().split(",");
-    const token = header[0];
+    let header = message.toString().split(",");
+    let token = header[0];
     if (!token) {
       ws.send('A token is required for authentication');
     } else {
@@ -147,38 +110,31 @@ wss.on('connection', (ws) => {
       } catch (err) {
         ws.send("Invalid Token");
       }
-    }
+    };
 
     function request(message) {
       if (count < 5) {
         count++
-        console.log("Received: '" + message + "'Attempts: " + count);
+        //console.log("Received: '" + message + "'Attempts: " + count);
         let operator = "Evaluar[" + message + "];"
         var workerProcess = child_process.exec('node ./parseator.js ' + operator,
           function (error, stdout, stderr) {
             if (error) {
-              console.log(error.stack);
-              console.log('Error code: ' + error.code);
-              console.log('Signal received: ' + error.signal);
+              //console.log(error.stack);
+              //console.log('Error code: ' + error.code);
+              //console.log('Signal received: ' + error.signal);
             }
-            console.log('stdout: ' + stdout);
+            //console.log('stdout: ' + stdout);
             ws.send(stdout);
-            //console.log('stderr: ' + stderr);  
           });
         workerProcess.on('exit', function (code) {
-          console.log('Child process exited with exit code ' + code);
+          //console.log('Child process exited with exit code ' + code);
         });
       } else {
         ws.send('You can not do more requests');
         ws.close();
-      }
-    }
-
-
-
-
-
-
+      };
+    };
   });
 });
 

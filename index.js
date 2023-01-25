@@ -1,33 +1,42 @@
+//Define a token to save jwt and a count to show remaining requests  
 var token;
-let count = 5;
+var count = 5;
 
 document.getElementById("loginButton").addEventListener("click", login);
 document.getElementById("requestButton").addEventListener("click", request);
 document.getElementById("registerButton").addEventListener("click", register);
 document.getElementById("createButton").addEventListener("click", showRegister);
 
-
-
+//Function to login from mongoDB
 function login() {
     let email = document.getElementById("email").value;
     let password = document.getElementById("password").value;
     fetch('http://localhost:3001/login', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             'email': email,
             'password': password
         })
     }).then(response => {
-        showRequest();
         return response.json();
-
     }).then(response => {
         token = response.data.token;
-
+        console.log(token);
+        if(token){
+            showRequest();
+        }else{
+            let alert = document.getElementById("alert");
+            alert.style.display = "flex";
+            let alertMessage = document.getElementById("alertMessage");
+            alertMessage.innerHTML = "Login Error"
+            console.log("Login Error");
+        }
+        
     });
 };
 
+//Create a WebSocket client to release the main server from each request
 function request() {
     let request = document.getElementById("textRequest").value;
     let result = document.getElementById("result");
@@ -43,16 +52,15 @@ function request() {
 
         socket.onmessage = function (event) {
             // alert(`[message] Data received from server: ${event.data}`);
-            console.log(event.data);
-            if(count > 0){
+            let resultado = event.data.toString().split("\n");
+
+            if (count > 0) {
                 count--;
-            }
-            
-            document.getElementById("requestR").innerHTML = count;
-            setTimeout(() => {
-                result.innerHTML = event.data;
-              }, Math.random() * (3000 - 1000) + 1000);
-            
+                document.getElementById("requestR").innerHTML = count;
+                setTimeout(() => {
+                    result.innerHTML = resultado[0] + "<br>" + resultado[1] + "<br>" + resultado[2] + "<br>"+ resultado[3] + "<br>";
+                }, Math.random() * (3000 - 1000) + 1000);
+            };
         };
         socket.onclose = function (event) {
             // if (event.wasClean) {
@@ -69,13 +77,14 @@ function request() {
     };
 };
 
-function register(){
+//function to register on mongoDB
+function register() {
     let email = document.getElementById("registerEmail").value;
     let password = document.getElementById("registerPassword").value;
     console.log(email, password);
     fetch('http://localhost:3001/register', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             'email': email,
             'password': password
@@ -88,10 +97,9 @@ function register(){
         console.log(response.message);
 
     });
+};
 
-
-}
-
+//Functions to show each form
 function showRequest() {
     document.getElementById("request").style.display = "flex";
     document.getElementById("login").style.display = "none";
