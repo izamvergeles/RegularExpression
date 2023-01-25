@@ -1,6 +1,8 @@
 //Define a token to save jwt and a count to show remaining requests  
 var token;
 var count = 5;
+let alert = document.getElementById("alert");
+let alertMessage = document.getElementById("alertMessage");
 
 document.getElementById("loginButton").addEventListener("click", login);
 document.getElementById("requestButton").addEventListener("click", request);
@@ -11,7 +13,7 @@ document.getElementById("createButton").addEventListener("click", showRegister);
 function login() {
     let email = document.getElementById("email").value;
     let password = document.getElementById("password").value;
-    fetch('http://localhost:3001/login', {
+    fetch('http://localhost:3030/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -21,18 +23,19 @@ function login() {
     }).then(response => {
         return response.json();
     }).then(response => {
-        token = response.data.token;
-        console.log(token);
-        if(token){
+        if (response.data) {
+            token = response.data.token;
+            console.log(token);
             showRequest();
-        }else{
-            let alert = document.getElementById("alert");
+
+        } else {
             alert.style.display = "flex";
-            let alertMessage = document.getElementById("alertMessage");
-            alertMessage.innerHTML = "Login Error"
+            alert.style.borderBottom = "2px solid red";
+
+            alertMessage.innerHTML = response.error;
             console.log("Login Error");
+            setTimeout(() => {alert.style.display = "none";}, 5000);
         }
-        
     });
 };
 
@@ -53,12 +56,17 @@ function request() {
         socket.onmessage = function (event) {
             // alert(`[message] Data received from server: ${event.data}`);
             let resultado = event.data.toString().split("\n");
+            let answer = "";
+            resultado.forEach(element => {
+                answer += element + "<br>";
+            });
 
             if (count > 0) {
                 count--;
                 document.getElementById("requestR").innerHTML = count;
                 setTimeout(() => {
-                    result.innerHTML = resultado[0] + "<br>" + resultado[1] + "<br>" + resultado[2] + "<br>"+ resultado[3] + "<br>";
+
+                    result.innerHTML = answer;
                 }, Math.random() * (3000 - 1000) + 1000);
             };
         };
@@ -82,7 +90,7 @@ function register() {
     let email = document.getElementById("registerEmail").value;
     let password = document.getElementById("registerPassword").value;
     console.log(email, password);
-    fetch('http://localhost:3001/register', {
+    fetch('http://localhost:3030/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -94,7 +102,15 @@ function register() {
         return response.json();
 
     }).then(response => {
-        console.log(response.message);
+        alert.style.display = "flex";
+        setTimeout(() => {alert.style.display = "none";}, 5000);
+        if (response.message) {
+            alert.style.borderBottom = "2px solid green";
+            alertMessage.innerHTML = response.message;
+        } else {
+            alert.style.borderBottom = "2px solid red";
+            alertMessage.innerHTML = response.error;
+        }
 
     });
 };

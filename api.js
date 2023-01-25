@@ -42,47 +42,62 @@ const userSchema = new mongoose.Schema({
 mongoose.set('strictQuery', true);
 const User = mongoose.model('User', userSchema);
 app.post('/register', async (req, res) => {
-  try {
-    mongoose.connect(process.env.MONGODB_URL);
-    console.log("Database connected");
-    let hashedPassword = await bcrypt.hash(req.body.password, 10);
-    let user = new User({
-      email: req.body.email,
-      password: hashedPassword,
-    });
-    user.save();
-    console.log("Inserted new user");
-    res.json({ message: "User Created" });
-  } catch (err) {
-    console.log("Connection Error: " + err);
-  };
+  if (req.body.email || req.body.password) {
+    let user = await User.findOne({ email: req.body.email });
+    if (user) {
+      res.json({ error: "The user alredy exists" });
+    } else {
+      try {
+        mongoose.connect(process.env.MONGODB_URL);
+        console.log("Database connected");
+        let hashedPassword = await bcrypt.hash(req.body.password, 10);
+        let user = new User({
+          email: req.body.email,
+          password: hashedPassword,
+        });
+        user.save();
+        console.log("Inserted new user");
+        res.json({ message: "User Created" });
+      } catch (err) {
+        console.log("Connection Error: " + err);
+        res.json({ error: "Register error, try again..." });
+      };
+    }
+  } else {
+    res.json({ error: "The user and password are required" });
+  }
 });
 
 //Login
 app.post('/login', async (req, res) => {
-  // try {
-  //   mongoose.connect(process.env.MONGODB_URL);
-  //   console.log("Database connected");
-  //   let user = await User.findOne({ email: req.body.email }); 
-  //   if (bcrypt.compareSync(req.body.password, user.password)) {
-  //     console.log("User verified");
-      const token = jwt.sign({
-        email: req.body.email,
-        password: req.body.password,
+  if (req.body.email || req.body.password) {
+    try {
+      mongoose.connect(process.env.MONGODB_URL);
+      console.log("Database connected");
+      let user = await User.findOne({ email: req.body.email });
+      if (bcrypt.compareSync(req.body.password, user.password)) {
+        console.log("User verified");
+        const token = jwt.sign({
+          email: req.body.email,
+          password: req.body.password,
 
-      }, process.env.TOKEN_SECRET, {
-        expiresIn: "10m"
-      })
-      res.header('auth-token', token).json({
-        error: null,
-        data: { token }
-      })
-  //   } else {
-  //     console.log("The username or password is incorrect");
-  //   }
-  // } catch (err) {
-  //   console.log("Login Error");
-  // };
+        }, process.env.TOKEN_SECRET, {
+          expiresIn: "10m"
+        })
+        res.header('auth-token', token).json({
+          error: null,
+          data: { token }
+        })
+      } else {
+        console.log("The username or password is incorrect");
+      }
+    } catch (err) {
+      res.json({ error: "Login Error" });
+      console.log("Login Error");
+    };
+  } else {
+    res.json({ error: "The user and password are required" });
+  };
 });
 
 //WebSocket to control each request
@@ -109,7 +124,7 @@ wss.on('connection', (ws) => {
         request(header[1]);
       } catch (err) {
         ws.send("Invalid Token");
-      }
+      };
     };
 
     function request(message) {
